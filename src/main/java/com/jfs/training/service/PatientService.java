@@ -55,5 +55,7 @@ public class PatientService {
         patientRepository.delete(existingPatient);
     }
     
-    
+    public List<Patient> searchPatientsByName(String name) {
+        return patientRepository.findByNameContainingIgnoreCase(name);
+    }
 }
