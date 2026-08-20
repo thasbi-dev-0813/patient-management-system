@@ -68,4 +68,13 @@ public class PatientController {
 
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/searchByName")
+    public ResponseEntity<List<Patient>> searchPatients(
+            @RequestParam String name) {
+
+        return ResponseEntity.ok(
+                patientService.searchPatientsByName(name)
+        );
+    }
 }
