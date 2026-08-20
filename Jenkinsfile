@@ -50,11 +50,11 @@ stage('Deploy') {
 
             echo "Restarting application..."
 
-            sudo -n systemctl restart patient-management
+            /usr/bin/sudo -n /bin/systemctl restart patient-management
 
             echo "Checking application status..."
 
-            sudo -n systemctl is-active --quiet patient-management
+            /usr/bin/sudo -n /bin/systemctl is-active --quiet patient-management
 
             echo "Deployment successful!"
         '''
