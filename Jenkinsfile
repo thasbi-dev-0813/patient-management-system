@@ -39,5 +39,18 @@ stage('Quality Gate') {
         }
     }
 }
+
+stage('Deploy') {
+    steps {
+        sh '''
+            echo "Deploying Patient Management System..."
+
+            cp target/PatientManagementSystem-0.0.1-SNAPSHOT.jar \
+               /opt/patient-management/PatientManagementSystem.jar
+
+            echo "JAR deployed successfully"
+        '''
+    }
+}
     }
 }
