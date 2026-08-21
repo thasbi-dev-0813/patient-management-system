@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    
+    triggers {
+        githubPush()
+    }
 
     tools {
         maven 'Maven-3.9.9'
