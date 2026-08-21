@@ -69,7 +69,7 @@ public class PatientController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/searchByName")
+    @GetMapping("/searchByPatientName")
     public ResponseEntity<List<Patient>> searchPatients(
             @RequestParam String name) {
 
