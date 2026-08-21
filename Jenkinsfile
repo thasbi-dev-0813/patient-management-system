@@ -67,10 +67,11 @@ pipeline {
             docker build -t patient-management-system:1.0 .
 
             # Start new container
-            docker run -d \
-                --name patient-management-container \
-                -p 8082:8081 \
-                patient-management-system:1.0
+            sudo docker run -d \
+  --name patient-management-container \
+  --add-host=host.docker.internal:host-gateway \
+  -p 8081:8081 \
+  patient-management-system:1.0
 
             echo "Patient Management System deployed successfully"
         '''
