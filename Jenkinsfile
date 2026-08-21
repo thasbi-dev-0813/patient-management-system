@@ -77,5 +77,22 @@ pipeline {
         '''
     }
 }
+
+stage('Verify Deployment') {
+    steps {
+        sh '''
+            echo "Waiting for application to start..."
+            sleep 10
+
+            echo "Checking container status..."
+            docker ps --filter "name=patient-management-container"
+
+            echo "Checking application..."
+            curl -f http://localhost:8081/patients/getAllPatients
+
+            echo "Application is running successfully!"
+        '''
+    }
+}
     }
 }
