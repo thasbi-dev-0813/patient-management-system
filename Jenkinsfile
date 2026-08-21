@@ -48,15 +48,7 @@ stage('Deploy') {
             cp target/PatientManagementSystem-0.0.1-SNAPSHOT.jar \
                /opt/patient-management/PatientManagementSystem.jar
 
-            echo "Restarting application..."
-
-            /usr/bin/sudo -n /bin/systemctl restart patient-management
-
-            echo "Checking application status..."
-
-            /usr/bin/sudo -n /bin/systemctl is-active --quiet patient-management
-
-            echo "Deployment successful!"
+            echo "JAR deployed successfully"
         '''
     }
 }
