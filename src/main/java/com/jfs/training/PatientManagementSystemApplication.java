@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class PatientManagementSystemApplication {
 
-	// Patient Management System
+	// Patient Management System Application
 	public static void main(String[] args) {
 		SpringApplication.run(PatientManagementSystemApplication.class, args);
 	}
