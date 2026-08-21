@@ -85,16 +85,25 @@ pipeline {
 stage('Verify Deployment') {
     steps {
         sh '''
-            echo "Waiting for application to start..."
-            sleep 10
+            echo "Waiting for Patient Management System to start..."
 
-            echo "Checking container status..."
-            docker ps --filter "name=patient-management-container"
+            for i in {1..12}; do
+                echo "Health check attempt $i..."
 
-            echo "Checking application..."
-            curl -f http://localhost:8081/patients/getAllPatients
+                if curl -f http://localhost:8081/patients/getAllPatients; then
+                    echo ""
+                    echo "Patient Management System is running successfully!"
+                    exit 0
+                fi
 
-            echo "Application is running successfully!"
+                echo "Application not ready yet. Waiting 5 seconds..."
+                sleep 5
+            done
+
+            echo "Application failed to start."
+            echo "Container logs:"
+            docker logs patient-management-container
+            exit 1
         '''
     }
 }
