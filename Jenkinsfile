@@ -87,10 +87,10 @@ stage('Verify Deployment') {
         sh '''
             echo "Waiting for Patient Management System to start..."
 
-            for i in {1..12}; do
-                echo "Health check attempt $i..."
+            for i in $(seq 1 12); do
+                echo "Health check attempt $i/12..."
 
-                if curl -f http://localhost:8081/patients/getAllPatients; then
+                if curl -f --max-time 5 http://localhost:8081/patients/getAllPatients; then
                     echo ""
                     echo "Patient Management System is running successfully!"
                     exit 0
@@ -100,9 +100,13 @@ stage('Verify Deployment') {
                 sleep 5
             done
 
-            echo "Application failed to start."
+            echo "Application failed to respond after 60 seconds."
+            echo "Container status:"
+            docker ps -a --filter name=patient-management-container
+
             echo "Container logs:"
             docker logs patient-management-container
+
             exit 1
         '''
     }
