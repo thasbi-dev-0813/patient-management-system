@@ -52,25 +52,29 @@ pipeline {
             }
         }
 
-        stage('Docker Deploy') {
-            steps {
-                sh '''
-                    echo "Deploying Patient Management System..."
+        stage('Deploy') {
+    steps {
+        sh '''
+            echo "Deploying Patient Management System..."
 
-                    docker stop patient-management-container || true
-                    docker rm patient-management-container || true
+            # Stop old container if running
+            docker stop patient-management-container || true
 
-                    docker run -d \
-                        --name patient-management-container \
-                        --add-host=host.docker.internal:host-gateway \
-                        -p 8082:8081 \
-                        patient-management-system:1.0
+            # Remove old container
+            docker rm patient-management-container || true
 
-                    echo "Docker container deployed successfully"
+            # Build new Docker image
+            docker build -t patient-management-system:1.0 .
 
-                    docker ps
-                '''
-            }
-        }
+            # Start new container
+            docker run -d \
+                --name patient-management-container \
+                -p 8082:8081 \
+                patient-management-system:1.0
+
+            echo "Patient Management System deployed successfully"
+        '''
+    }
+}
     }
 }
