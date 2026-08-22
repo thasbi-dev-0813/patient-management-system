@@ -55,6 +55,20 @@ pipeline {
                 '''
             }
         }
+        
+        stage('Docker Deploy') {
+    steps {
+        sh '''
+            docker stop patient-management-container || true
+            docker rm patient-management-container || true
+
+            docker run -d \
+                --name patient-management-container \
+                -p 8081:8081 \
+                patient-management-system:1.0
+        '''
+    }
+}
 
         stage('Deploy') {
     steps {
