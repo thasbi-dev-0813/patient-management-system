@@ -91,9 +91,7 @@ pipeline {
 
 
 stage('Docker Deploy') {
-
     steps {
-
         sh '''
             set -e
 
@@ -108,29 +106,28 @@ stage('Docker Deploy') {
 
             echo "New image: ${NEW_IMAGE}"
 
-            if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"
-            then
-                PREVIOUS_IMAGE=$(docker inspect ${CONTAINER_NAME} \
-                    --format='{{.Config.Image}}')
+            # Check whether an existing container exists
+            if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+
+                PREVIOUS_IMAGE=$(docker inspect ${CONTAINER_NAME} --format='{{.Config.Image}}')
 
                 echo "Previous image: ${PREVIOUS_IMAGE}"
 
+                # Save previous image for rollback
                 echo "${PREVIOUS_IMAGE}" > ${BACKUP_FILE}
+
+                echo "Stopping old container..."
+                docker stop ${CONTAINER_NAME}
+
+                echo "Removing old container..."
+                docker rm ${CONTAINER_NAME}
+
             else
                 echo "No previous container found."
                 rm -f ${BACKUP_FILE}
             fi
 
-            echo "Stopping old container..."
-
-            docker stop ${CONTAINER_NAME} || true
-
-            echo "Removing old container..."
-
-            docker rm ${CONTAINER_NAME} || true
-
-            echo "Pulling build image..."
-
+            echo "Pulling new image..."
             docker pull ${NEW_IMAGE}
 
             echo "Starting new container..."
@@ -151,9 +148,7 @@ stage('Docker Deploy') {
         
 
        stage('Deployment Verification') {
-
     steps {
-
         sh '''
             CONTAINER_NAME="patient-management-container"
             HEALTH_URL="http://localhost:8081/patients/getAllPatients"
@@ -165,146 +160,102 @@ stage('Docker Deploy') {
 
             echo "Checking container status..."
 
-            docker ps --filter "name=${CONTAINER_NAME}"
+            docker ps --filter name=${CONTAINER_NAME}
 
             echo "Waiting for application to start..."
 
             DEPLOYMENT_SUCCESS=false
 
-            for i in {1..12}
-            do
+            for i in $(seq 1 12); do
 
                 echo "Attempt $i: Checking application..."
 
-                if curl --fail --silent ${HEALTH_URL} > /tmp/patient-response.json
-                then
-
-                    echo "Application is UP!"
-
-                    cat /tmp/patient-response.json
-
+                if curl --fail --silent ${HEALTH_URL}; then
                     DEPLOYMENT_SUCCESS=true
-
+                    echo ""
+                    echo "Application is healthy!"
                     break
-
                 fi
 
                 echo "Application is not ready yet."
-
                 sleep 5
-
             done
 
-
-            if [ "$DEPLOYMENT_SUCCESS" = true ]
-            then
+            if [ "$DEPLOYMENT_SUCCESS" = "true" ]; then
 
                 echo "========================================"
-                echo "Deployment verification successful."
+                echo "DEPLOYMENT SUCCESSFUL"
                 echo "========================================"
-
-                exit 0
-
-            fi
-
-
-            echo "========================================"
-            echo "DEPLOYMENT FAILED"
-            echo "========================================"
-
-            echo "New container logs:"
-
-            docker logs ${CONTAINER_NAME} || true
-
-
-            if [ -f "${BACKUP_FILE}" ]
-            then
-
-                PREVIOUS_IMAGE=$(cat ${BACKUP_FILE})
-
-                echo "========================================"
-                echo "Starting Rollback"
-                echo "========================================"
-
-                echo "Previous image: ${PREVIOUS_IMAGE}"
-
-                echo "Stopping failed container..."
-
-                docker stop ${CONTAINER_NAME} || true
-
-                echo "Removing failed container..."
-
-                docker rm ${CONTAINER_NAME} || true
-
-                echo "Pulling previous image..."
-
-                docker pull ${PREVIOUS_IMAGE}
-
-                echo "Starting previous version..."
-
-                docker run -d \
-                    --name ${CONTAINER_NAME} \
-                    --add-host=host.docker.internal:host-gateway \
-                    -p 8081:8081 \
-                    ${PREVIOUS_IMAGE}
-
-                echo "Rollback container started."
-
-                echo "Waiting for rollback application..."
-
-                ROLLBACK_SUCCESS=false
-
-                for i in {1..12}
-                do
-
-                    echo "Rollback verification attempt $i..."
-
-                    if curl --fail --silent ${HEALTH_URL} > /tmp/rollback-response.json
-                    then
-
-                        echo "========================================"
-                        echo "ROLLBACK SUCCESSFUL"
-                        echo "========================================"
-
-                        cat /tmp/rollback-response.json
-
-                        ROLLBACK_SUCCESS=true
-
-                        break
-
-                    fi
-
-                    sleep 5
-
-                done
-
-
-                if [ "$ROLLBACK_SUCCESS" = true ]
-                then
-
-                    echo "Previous version successfully restored."
-
-                else
-
-                    echo "Rollback verification FAILED."
-
-                    docker logs ${CONTAINER_NAME}
-
-                    exit 1
-
-                fi
 
             else
 
-                echo "No previous image available."
-                echo "Rollback cannot be performed."
+                echo "========================================"
+                echo "DEPLOYMENT FAILED"
+                echo "========================================"
 
-                exit 1
+                echo "New container logs:"
+                docker logs ${CONTAINER_NAME}
 
+                if [ -f "${BACKUP_FILE}" ]; then
+
+                    PREVIOUS_IMAGE=$(cat ${BACKUP_FILE})
+
+                    echo "========================================"
+                    echo "Starting Rollback"
+                    echo "========================================"
+
+                    echo "Previous image: ${PREVIOUS_IMAGE}"
+
+                    echo "Stopping failed container..."
+                    docker stop ${CONTAINER_NAME} || true
+
+                    echo "Removing failed container..."
+                    docker rm ${CONTAINER_NAME} || true
+
+                    echo "Pulling previous image..."
+                    docker pull ${PREVIOUS_IMAGE}
+
+                    echo "Starting previous container..."
+
+                    docker run -d \
+                        --name ${CONTAINER_NAME} \
+                        --add-host=host.docker.internal:host-gateway \
+                        -p 8081:8081 \
+                        ${PREVIOUS_IMAGE}
+
+                    echo "Rollback container started."
+
+                    sleep 10
+
+                    echo "Checking rollback..."
+
+                    if curl --fail --silent ${HEALTH_URL}; then
+
+                        echo ""
+                        echo "========================================"
+                        echo "ROLLBACK SUCCESSFUL"
+                        echo "========================================"
+                        echo "Restored image: ${PREVIOUS_IMAGE}"
+
+                    else
+
+                        echo ""
+                        echo "========================================"
+                        echo "ROLLBACK FAILED"
+                        echo "========================================"
+
+                        docker logs ${CONTAINER_NAME}
+
+                        exit 1
+                    fi
+
+                else
+
+                    echo "No previous image available for rollback."
+                    exit 1
+
+                fi
             fi
-
-
-            exit 1
         '''
     }
 }
