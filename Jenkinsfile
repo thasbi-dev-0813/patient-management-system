@@ -64,12 +64,14 @@ pipeline {
             docker rm patient-management-container || true
 
             docker run -d \
-                --name patient-management-container \
-                -p 8081:8081 \
-                patient-management-system:build-${BUILD_NUMBER}
+              --name patient-management-container \
+              --add-host=host.docker.internal:host-gateway \
+              -p 8081:8081 \
+              patient-management-system:build-${BUILD_NUMBER}
         '''
     }
 }
+
 
         stage('Deployment Verification') {
     steps {
