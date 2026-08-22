@@ -106,7 +106,7 @@ pipeline {
                 --name patient-management-container \
                 --add-host=host.docker.internal:host-gateway \
                 -p 8081:8081 \
-                thasbidocker/patient-management-system:latest-${BUILD_NUMBER}
+                thasbidocker/patient-management-system:latest
 
             echo "Docker deployment completed"
         '''
