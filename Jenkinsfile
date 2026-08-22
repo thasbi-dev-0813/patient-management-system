@@ -42,19 +42,20 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Docker Build') {
-            steps {
-                sh '''
-                    echo "Building Docker image..."
-
-                    docker build \
-                        -t patient-management-system:1.0 .
-
-                    echo "Docker image built successfully"
-                '''
-            }
-        }
+    steps {
+        sh '''
+        
+            echo "Building Docker image..."
+             
+            docker build -t patient-management-system:build-${BUILD_NUMBER} .
+            docker tag patient-management-system:build-${BUILD_NUMBER} patient-management-system:latest
+            
+            echo "Docker image built successfully"
+        '''
+    }
+}
         
         stage('Docker Deploy') {
     steps {
@@ -65,7 +66,19 @@ pipeline {
             docker run -d \
                 --name patient-management-container \
                 -p 8081:8081 \
-                patient-management-system:1.0
+                patient-management-system:build-${BUILD_NUMBER}
+        '''
+    }
+}
+
+        stage('Deployment Verification') {
+    steps {
+        sh '''
+            sleep 10
+
+            docker ps --filter "name=patient-management-container"
+
+            curl --fail http://localhost:8081/patients/getAllPatients
         '''
     }
 }
