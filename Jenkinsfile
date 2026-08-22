@@ -89,24 +89,30 @@ pipeline {
     }
 }
 
-       stage('Docker Deploy') {
+stage('Docker Deploy') {
+
     steps {
+
         sh '''
             echo "Stopping old container..."
+
             docker stop patient-management-container || true
 
             echo "Removing old container..."
+
             docker rm patient-management-container || true
 
-            echo "Pulling latest image from Docker Hub..."
-            docker pull thasbidocker/patient-management-system:latest
+            echo "Pulling build image from Docker Hub..."
+
+            docker pull thasbidocker/patient-management-system:build-${BUILD_NUMBER}
 
             echo "Starting new container..."
+
             docker run -d \
                 --name patient-management-container \
                 --add-host=host.docker.internal:host-gateway \
                 -p 8081:8081 \
-                thasbidocker/patient-management-system:latest
+                thasbidocker/patient-management-system:build-${BUILD_NUMBER}
 
             echo "Docker deployment completed"
         '''
