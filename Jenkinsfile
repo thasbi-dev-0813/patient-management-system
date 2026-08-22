@@ -4,6 +4,10 @@ pipeline {
     triggers {
         githubPush()
     }
+    
+    environment {
+    DOCKER_HUB_USERNAME = 'thasbidocker'
+}
 
     tools {
         maven 'Maven-3.9.9'
@@ -46,14 +50,42 @@ pipeline {
         stage('Docker Build') {
     steps {
         sh '''
-        
             echo "Building Docker image..."
-             
+
             docker build -t patient-management-system:build-${BUILD_NUMBER} .
-            docker tag patient-management-system:build-${BUILD_NUMBER} patient-management-system:latest
-            
+            docker tag patient-management-system:build-${BUILD_NUMBER} ${DOCKER_HUB_USERNAME}/patient-management-system:build-${BUILD_NUMBER}
+            docker tag patient-management-system:build-${BUILD_NUMBER} ${DOCKER_HUB_USERNAME}/patient-management-system:latest
+
             echo "Docker image built successfully"
         '''
+    }
+}
+
+        stage('Docker Push') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-credentials',
+            usernameVariable: 'DOCKER_USERNAME',
+            passwordVariable: 'DOCKER_PASSWORD'
+        )]) {
+            sh '''
+                echo "Logging in to Docker Hub..."
+
+                echo "$DOCKER_PASSWORD" | docker login \
+                    -u "$DOCKER_USERNAME" \
+                    --password-stdin
+
+                echo "Pushing build image..."
+                docker push thasbidocker/patient-management-system:build-${BUILD_NUMBER}
+
+                echo "Pushing latest image..."
+                docker push thasbidocker/patient-management-system:latest
+
+                docker logout
+
+                echo "Docker images pushed successfully"
+            '''
+        }
     }
 }
         
