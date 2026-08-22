@@ -76,11 +76,30 @@ pipeline {
         stage('Deployment Verification') {
     steps {
         sh '''
-            sleep 10
+            echo "Waiting for application to start..."
 
-            docker ps --filter "name=patient-management-container"
+            for i in {1..12}
+            do
+                echo "Attempt $i: Checking application..."
 
-            curl --fail http://localhost:8081/patients/getAllPatients
+                if curl --fail --silent http://localhost:8081/patients/getAllPatients > /tmp/patient-response.json
+                then
+                    echo "Application is UP!"
+                    cat /tmp/patient-response.json
+                    break
+                fi
+
+                if [ $i -eq 12 ]
+                then
+                    echo "Application failed to start."
+                    docker logs patient-management-container
+                    exit 1
+                fi
+
+                sleep 5
+            done
+
+            echo "Deployment verification successful."
         '''
     }
 }
