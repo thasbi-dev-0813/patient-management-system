@@ -1,30 +1,24 @@
-package com.jfs.training.entity;
-
+package com.jfs.training.dto;
 import java.time.LocalDate;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
-@Entity
-@Table(name = "patients")
-public class Patient {
+public class PatientRequestDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @Column(unique=true)
+    @NotBlank(message = "Email is required")
+    @Email(message = "Enter a valid email")
     private String email;
 
+    @NotBlank(message = "Phone number is required")
+    @Pattern(
+        regexp = "^[0-9]{10}$",
+        message = "Phone number must contain 10 digits"
+    )
     private String phone;
 
     private LocalDate dateOfBirth;
@@ -32,14 +26,6 @@ public class Patient {
     private String gender;
 
     private String address;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
