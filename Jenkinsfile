@@ -35,7 +35,7 @@ pipeline {
             echo "Running Unit Tests"
             echo "========================================"
 
-            mvn clean test
+            mvn test
 
             echo "========================================"
             echo "Unit Tests Completed Successfully"
