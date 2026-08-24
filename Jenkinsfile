@@ -169,29 +169,45 @@ stage('Docker Deploy') {
     }
 }
 
-       stage('API Smoke Test') { 
-		steps { 
-			echo '========================================'
-			echo 'Running API Smoke Test'
-			echo '========================================'
-			
-			sh '''
-			echo "Checking Patient Management API..." 
-			
-			RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/patients/getAllPatients)
-			
-			echo "HTTP Response Code: $RESPONSE" 
-			
-			if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
-			     echo "API Smoke Test PASSED"
-			
-			else
-			     echo "API Smoke Test FAILED" exit 1 fi ''' 
-			     
-			} 
-			
-	}
-       
+    
+    stage('API Smoke Test') {
+    steps {
+        echo '========================================'
+        echo 'Running API Smoke Test'
+        echo '========================================'
+
+        sh '''
+            echo "Checking Patient Management API..."
+
+            MAX_RETRIES=12
+            RETRY_COUNT=0
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+
+                RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/patients/getAllPatients || true)
+
+                echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES - HTTP Response Code: $RESPONSE"
+
+                if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
+                    echo "API Smoke Test PASSED"
+                    exit 0
+                fi
+
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+
+                echo "API is not ready yet. Waiting 5 seconds..."
+                sleep 5
+            done
+
+            echo "API Smoke Test FAILED"
+            echo "Patient Management API did not become available."
+            echo "Container logs:"
+            docker logs patient-management-container --tail 50
+
+            exit 1
+        '''
+    }
+}
         
 
        stage('Deployment Verification') {
