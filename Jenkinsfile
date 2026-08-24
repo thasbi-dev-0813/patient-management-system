@@ -168,6 +168,30 @@ stage('Docker Deploy') {
         '''
     }
 }
+
+       stage('API Smoke Test') { 
+		steps { 
+			echo '========================================'
+			echo 'Running API Smoke Test'
+			echo '========================================'
+			
+			sh '''
+			echo "Checking Patient Management API..." 
+			
+			RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \ http://localhost:8081/patients/getAllPatients)
+			
+			echo "HTTP Response Code: $RESPONSE" 
+			
+			if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 300 ]; then
+			     echo "API Smoke Test PASSED"
+			
+			else
+			     echo "API Smoke Test FAILED" exit 1 fi ''' 
+			     
+			} 
+			
+	}
+       
         
 
        stage('Deployment Verification') {
