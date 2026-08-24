@@ -290,61 +290,9 @@ stage('Deployment Information') {
     }
 }
 
-        stage('Deploy') {
-    steps {
-        sh '''
-            echo "Deploying Patient Management System..."
+        
 
-            # Stop old container if running
-            docker stop patient-management-container || true
 
-            # Remove old container
-            docker rm patient-management-container || true
-
-            # Build new Docker image
-            docker build -t patient-management-system:1.0 .
-
-            # Start new container
-            docker run -d \
-  --name patient-management-container \
-  --add-host=host.docker.internal:host-gateway \
-  -p 8081:8081 \
-  patient-management-system:1.0
-
-            echo "Patient Management System deployed successfully"
-        '''
-    }
-}
-
-stage('Verify Deployment') {
-    steps {
-        sh '''
-            echo "Waiting for Patient Management System to start..."
-
-            for i in $(seq 1 12); do
-                echo "Health check attempt $i/12..."
-
-                if curl -f --max-time 5 http://localhost:8081/patients/getAllPatients; then
-                    echo ""
-                    echo "Patient Management System is running successfully!"
-                    exit 0
-                fi
-
-                echo "Application not ready yet. Waiting 5 seconds..."
-                sleep 5
-            done
-
-            echo "Application failed to respond after 60 seconds."
-            echo "Container status:"
-            docker ps -a --filter name=patient-management-container
-
-            echo "Container logs:"
-            docker logs patient-management-container
-
-            exit 1
-        '''
-    }
-}
     }
     
     post {
