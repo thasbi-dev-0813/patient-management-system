@@ -178,7 +178,7 @@ stage('Docker Deploy') {
 			sh '''
 			echo "Checking Patient Management API..." 
 			
-			RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \ http://localhost:8081/patients/getAllPatients)
+			RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/patients/getAllPatients)
 			
 			echo "HTTP Response Code: $RESPONSE" 
 			
