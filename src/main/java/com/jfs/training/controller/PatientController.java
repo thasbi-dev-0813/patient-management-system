@@ -1,6 +1,5 @@
 package com.jfs.training.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +17,11 @@ import javax.validation.Valid;
 @CrossOrigin(origins = "*")
 public class PatientController {
 
-	@Autowired
-    PatientService patientService;
+	private final PatientService patientService;
+
+	public PatientController(PatientService patientService) {
+	    this.patientService = patientService;
+	}
 
 	 @PostMapping("/registerPatient")
 	    public ResponseEntity<Patient> registerPatient(

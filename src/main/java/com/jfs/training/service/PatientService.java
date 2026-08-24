@@ -1,6 +1,5 @@
 package com.jfs.training.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.jfs.training.dto.PatientRequestDTO;
@@ -13,8 +12,11 @@ import java.util.List;
 @Service
 public class PatientService {
 
-    @Autowired
-    private PatientRepository patientRepository;
+	private final PatientRepository patientRepository;
+
+	public PatientService(PatientRepository patientRepository) {
+	    this.patientRepository = patientRepository;
+	}
 
     public Patient registerPatient(PatientRequestDTO patientDTO) {
 
