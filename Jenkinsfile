@@ -27,6 +27,29 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
+        
+        stage('Unit Tests') {
+    steps {
+        sh '''
+            echo "========================================"
+            echo "Running Unit Tests"
+            echo "========================================"
+
+            mvn clean test
+
+            echo "========================================"
+            echo "Unit Tests Completed Successfully"
+            echo "========================================"
+        '''
+    }
+
+    post {
+        always {
+            junit 'target/surefire-reports/*.xml'
+        }
+    }
+}
+
 
         stage('SonarQube Analysis') {
             steps {
